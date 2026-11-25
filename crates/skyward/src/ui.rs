@@ -1273,7 +1273,7 @@ impl<'a> Pages<'a> {
             surface.settle()?;
         }
         eprintln!("display {}", surface.describe());
-        let inputs = Inputs::open(w, h, cfg.touch.writes.clone())?;
+        let inputs = Inputs::open(w, h, cfg.touch.clone())?;
         let started = Instant::now();
         let control = Control::open()?;
         let haptics = cfg.haptics.as_ref().map(Haptics::open).transpose()?;

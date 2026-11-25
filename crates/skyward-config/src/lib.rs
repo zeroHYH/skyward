@@ -330,6 +330,26 @@ pub struct Touch {
     /// step of starting the controller.
     #[serde(default)]
     pub writes: Vec<Write>,
+    /// Swap normalized axes before flipping them into display coordinates.
+    #[serde(default)]
+    pub swap_xy: bool,
+    #[serde(default)]
+    pub flip_x: bool,
+    #[serde(default)]
+    pub flip_y: bool,
+    /// Input device names to leave out, such as a tablet's separate pen.
+    #[serde(default)]
+    pub ignored_devices: Vec<String>,
+}
+
+impl Touch {
+    /// Convert normalized controller coordinates to normalized screen
+    /// coordinates. Normalize before swapping: landscape panels may have
+    /// different ranges on the two controller axes.
+    pub fn map(&self, x: f32, y: f32) -> (f32, f32) {
+        let (x, y) = if self.swap_xy { (y, x) } else { (x, y) };
+        (if self.flip_x { 1.0 - x } else { x }, if self.flip_y { 1.0 - y } else { y })
+    }
 }
 
 /// Partitions as the phone itself mounts them.

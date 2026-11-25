@@ -106,6 +106,7 @@ merged, super and the logical partitions in it are not flashed.
 | Xiaomi 17 Ultra | `nezha` | OS4.0.4.0.XPACNXM (Android 17) |
 | Xiaomi 13 Ultra | `ishtar` | OS3.0.308.0.WMACNXM (Android 16) |
 | REDMI K60 Pro | `socrates` | OS4.0.0.24.XMKCNXM (Android 17) |
+| Xiaomi Pad 7 Pro | `muyu` | OS4.0.3.0.XOYCNXM (Android 17) |
 
 ### 🚧 Under construction
 
