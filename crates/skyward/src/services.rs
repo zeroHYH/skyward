@@ -9,7 +9,6 @@ use skyward_vab::Mounted;
 use std::collections::{BTreeSet, HashMap};
 use std::ffi::{CStr, CString};
 use std::fs;
-use std::ffi::CString;
 use std::io;
 use std::os::fd::{AsRawFd, FromRawFd, OwnedFd, RawFd};
 use std::os::unix::ffi::OsStrExt;
