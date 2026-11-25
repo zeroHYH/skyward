@@ -16,9 +16,21 @@ pub struct State {
     /// How long the screen stays on with nothing touched, by its place in
     /// [`SCREEN_OFF`].
     pub screen_off: usize,
-    /// The time zone the clock and the times on the pages keep, by its
-    /// place in [`TIME_ZONES`].
+    /// The clock and the times on the pages keep the time zone the
+    /// installed system is set to, where that is known.
+    pub follow_system_zone: bool,
+    /// The time zone chosen on its pages, by its place in [`TIME_ZONES`],
+    /// which the clock keeps while the system's is not followed or not
+    /// known.
     pub time_zone: usize,
+    /// The time zone the installed system is set to, as far as it is
+    /// known: read from the data partition once it opens, and until then
+    /// the one read at an earlier start, or the one the system is built to
+    /// start in.
+    pub system_zone: Option<SystemZone>,
+    /// The time, in Unix seconds and to the minute, at which the time zone
+    /// pages tell how far each zone is from UTC.
+    pub now: i64,
     pub vibrate: bool,
     /// Hardware capability, independent of the saved touch-feedback preference.
     pub supports_vibration: bool,
@@ -67,7 +79,7 @@ pub struct State {
     pub mounts: Result<Vec<MountRow>, String>,
     pub mount_failure: Option<MountFailure>,
     /// Which of [`BACKUP_PARTS`] a backup takes.
-    pub backup: [bool; 4],
+    pub backup: [bool; 5],
     /// Where a backup goes.
     pub backup_to: Place,
     pub compress: bool,
@@ -76,7 +88,7 @@ pub struct State {
     pub backups: Vec<BackupEntry>,
     /// The backup the restore page shows, as it was found, and which of its
     /// parts to restore.
-    pub restore: Option<(BackupEntry, [bool; 4])>,
+    pub restore: Option<(BackupEntry, [bool; 5])>,
     /// Backing up or restoring under way, or how it last ended.
     pub backup_job: Option<BackupJob>,
     /// Which logs to export: the recovery's, the kernel's.
@@ -199,7 +211,10 @@ impl Default for State {
             brightness: SLIDER_START,
             // Two minutes.
             screen_off: 3,
-            time_zone: 0,
+            follow_system_zone: true,
+            time_zone: listed(FIRST_ZONE).expect("the first zone is one listed"),
+            system_zone: None,
+            now: 0,
             vibrate: true,
             supports_vibration: true,
             tablet: false,
@@ -223,7 +238,7 @@ impl Default for State {
             reflash: None,
             mounts: Ok(Vec::new()),
             mount_failure: None,
-            backup: [true, true, false, true],
+            backup: [true, true, false, false, true],
             backup_to: Place::Storage,
             compress: false,
             verify: true,

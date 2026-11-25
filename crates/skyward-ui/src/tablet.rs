@@ -5,24 +5,39 @@ use crate::color::{mix, Rgba};
 use crate::font::Fonts;
 use crate::geom::Rect;
 use crate::icons::{self, Icon};
-use crate::lang::{Lang, Text};
+use crate::lang::Lang;
 use crate::pages::{BLUE, GREEN, ORANGE, PURPLE, RED, SLATE};
+use crate::texts;
 use crate::theme::Theme;
 use crate::widgets;
 
-const SECTIONS: &[(Screen, Text, Icon)] = &[
-    (Screen::About, ["我的设备", "我的裝置", "My device"], Icon::Phone),
-    (Screen::Search, ["搜索", "搜尋", "Search"], Icon::More),
-    (Screen::Wlan, ["WLAN", "Wi-Fi", "Wi-Fi"], Icon::Wlan),
-    (Screen::Install, ["安装", "安裝", "Install"], Icon::Install),
-    (Screen::Backup, ["备份", "備份", "Backup"], Icon::Backup),
-    (Screen::Restore, ["恢复", "還原", "Restore"], Icon::Restore),
-    (Screen::Mount, ["挂载", "掛載", "Mount"], Icon::Mount),
-    (Screen::Decrypt, ["解密", "解密", "Decrypt"], Icon::Lock),
-    (Screen::Wipe, ["清除数据", "清除資料", "Wipe data"], Icon::Wipe),
-    (Screen::Advanced, ["高级", "進階", "Advanced"], Icon::More),
-    (Screen::Settings, ["设置", "設定", "Settings"], Icon::Gear),
-    (Screen::Reboot, ["重启", "重新啟動", "Reboot"], Icon::Power),
+enum Label {
+    Text(crate::lang::Text),
+    Among(&'static str, &'static str, &'static str),
+}
+
+impl Label {
+    fn pick(&self, lang: Lang) -> &'static str {
+        match *self {
+            Self::Text(t) => lang.pick(t),
+            Self::Among(hans, hant, en) => lang.among(hans, hant, en),
+        }
+    }
+}
+
+const SECTIONS: &[(Screen, Label, Icon)] = &[
+    (Screen::About, Label::Among("我的设备", "我的裝置", "My device"), Icon::Phone),
+    (Screen::Search, Label::Among("搜索", "搜尋", "Search"), Icon::More),
+    (Screen::Wlan, Label::Text(texts::page::WLAN), Icon::Wlan),
+    (Screen::Install, Label::Text(texts::page::INSTALL), Icon::Install),
+    (Screen::Backup, Label::Text(texts::page::BACKUP), Icon::Backup),
+    (Screen::Restore, Label::Text(texts::page::RESTORE), Icon::Restore),
+    (Screen::Mount, Label::Text(texts::page::MOUNT), Icon::Mount),
+    (Screen::Decrypt, Label::Text(texts::page::DECRYPT), Icon::Lock),
+    (Screen::Wipe, Label::Text(texts::page::WIPE), Icon::Wipe),
+    (Screen::Advanced, Label::Text(texts::page::ADVANCED), Icon::More),
+    (Screen::Settings, Label::Text(texts::page::SETTINGS), Icon::Gear),
+    (Screen::Reboot, Label::Text(texts::page::REBOOT), Icon::Power),
 ];
 
 pub(crate) fn is_section(screen: Screen) -> bool {
@@ -85,7 +100,7 @@ impl Tablet {
             let search = Rect::new(18.0*d, 148.0*d, self.width as f32-36.0*d, 42.0*d);
             widgets::search_bar(c, &t, search, 1.0);
             let words = widgets::search_words(&t, f, search,
-                app.state.lang.pick(["搜索恢复功能", "搜尋復原功能", "Search recovery"]));
+                app.state.lang.among("搜索恢复功能", "搜尋復原功能", "Search recovery"));
             c.lay(&words, search.x.floor() as i32, search.y.floor() as i32, 1.0);
             let entries: Vec<_> = SECTIONS.iter().filter(|(s, _, _)| *s != Screen::Search && (*s != Screen::Wlan || wlan)).collect();
             let top = 202.0*d;
@@ -125,7 +140,7 @@ impl Tablet {
                 y += gap;
                 first = end;
             }
-            for (index, &&(screen, title, icon)) in entries.iter().enumerate() {
+            for (index, &&(screen, ref title, icon)) in entries.iter().enumerate() {
                 let y = positions[index];
                 let r = Rect::new(18.0*d, y, self.width as f32 - 36.0*d, row);
                 if y + row <= top || y >= self.height as f32 { continue; }
@@ -142,7 +157,7 @@ impl Tablet {
                 let mut compact = t;
                 compact.m.icon = 26.0*d;
                 icons::tile(&mut list, &compact, 31.0*d, y + (row-compact.m.icon)/2.0, color, icon);
-                list.text_vc(&f.body, app.state.lang.pick(title), 66.0*d, y + row/2.0,
+                list.text_vc(&f.body, title.pick(app.state.lang), 66.0*d, y + row/2.0,
                     17.0*d, ink, Some(self.width as f32 - 90.0*d));
                 self.hits.push((Rect::new(r.x, r.y.max(top), r.w, (r.y+r.h).min(self.height as f32)-r.y.max(top)), screen));
             }
